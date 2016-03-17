@@ -1,4 +1,6 @@
 import sys
+import os
+import shutil
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5 import QtGui, QtCore
 
@@ -7,6 +9,7 @@ class MyTable(QTableWidget):
     def __init__(self, rows, columns, parent):
         super(MyTable, self).__init__(rows, columns, parent)
         self.setAcceptDrops(True)
+        self.root_dir = '/Users/johan/Desktop/apa'
 
     def dragEnterEvent(self, event):
         event.accept()
@@ -27,9 +30,8 @@ class MyTable(QTableWidget):
                     item = self.item(row, col)
                     item.setBackground(QtGui.QBrush(QtGui.QColor(125,125,125)))
 
-                #print(index.data())
-                #item = self.itemAt(event.pos())
-                #print(item)
+                new_name = '{}_{}'.format(self.item(row, 0).text(), self.item(row, 1).text())
+                copy_to_folder(links[0], self.root_dir, '{}.pdf'.format(new_name))
                 
 
     def dragMoveEvent(self, event):
@@ -37,11 +39,22 @@ class MyTable(QTableWidget):
         self.selectRow(index.row())
         event.accept()
 
+def copy_to_folder(source_file, root_dir, new_name):
+
+    dest_file = os.path.join(root_dir, new_name)
+
+    if os.path.isfile(dest_file):
+        print('File exists. Overwrite?')
+
+    shutil.copy(source_file, dest_file)
+
 class BaseWin(QWidget):
     
     def __init__(self):
         super().__init__()
-                
+        
+        #self.root_dir = '/Users/johan/Desktop/apa'
+
         self.setGeometry(300, 300, 300, 220)
         self.setWindowTitle('Icon')
         #self.setWindowIcon(QtGui.QIcon('icon.png'))  
@@ -61,9 +74,9 @@ class BaseWin(QWidget):
 
         vbox.addWidget(self.table)
 
-        for x in range(10):
-            self.table.setItem(x, 0, QTableWidgetItem('Item {}'.format(x)))
-            self.table.setItem(x, 1, QTableWidgetItem('Data {}'.format(x)))
+        for x in range(9):
+            self.table.setItem(x, 0, QTableWidgetItem('2015 12 0{}'.format(x)))
+            self.table.setItem(x, 1, QTableWidgetItem('Apple invoice {}'.format(x)))
 
         
     
