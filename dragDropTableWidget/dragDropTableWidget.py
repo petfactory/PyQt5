@@ -26,9 +26,13 @@ class MyTable(QTableWidget):
                 index = self.indexAt(event.pos())
                 row = index.row()
 
+                item = self.item(row, 0)
+                item.setIcon(QtGui.QIcon('checkmark.png'))
+                self.clearSelection()
+
                 for col in range(2):
                     item = self.item(row, col)
-                    item.setBackground(QtGui.QBrush(QtGui.QColor(125,125,125)))
+                    item.setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
 
                 new_name = '{}_{}'.format(self.item(row, 0).text(), self.item(row, 1).text())
                 copy_to_folder(links[0], self.root_dir, '{}.pdf'.format(new_name))
@@ -75,7 +79,7 @@ class BaseWin(QWidget):
         vbox.addWidget(self.table)
 
         for x in range(9):
-            self.table.setItem(x, 0, QTableWidgetItem('2015 12 0{}'.format(x)))
+            self.table.setItem(x, 0, QTableWidgetItem(QtGui.QIcon('empty.png'), '2015 12 0{}'.format(x)))
             self.table.setItem(x, 1, QTableWidgetItem('Apple invoice {}'.format(x)))
 
         
