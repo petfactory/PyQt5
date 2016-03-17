@@ -1,0 +1,3 @@
+([('invoice_sorter',
+   '/Users/johan/Dev/PyQt5/invoice_sorter/dist/invoice_sorter',
+   'EXECUTABLE')],)
