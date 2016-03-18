@@ -1,105 +1,114 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTreeView, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication, QMainWindow, QFrame, QTableView, QVBoxLayout, QAbstractItemView
 from PyQt5 import QtGui, QtCore
 
-class MyTable(QTableWidget):
 
-    def __init__(self, rows, columns, parent):
-        super(MyTable, self).__init__(rows, columns, parent)
-        self.setAcceptDrops(True)
+class MyTableView(QTableView):
 
-    def dragEnterEvent(self, event):
+    def dragMoveEvent(self, event):
+        index = self.indexAt(event.pos())
+        self.selectRow(index.row())
         event.accept()
 
     def dropEvent(self, event):
+
         if event.mimeData().hasUrls:
-            event.setDropAction(QtCore.Qt.CopyAction)
-            event.accept()
-            links = []
-            for url in event.mimeData().urls():
-                
-                links.append(str(url.toLocalFile()))
-                print(links[0])
-                #print(event.pos())
-                index = self.indexAt(event.pos())
-                print(index.data())
+                event.setDropAction(QtCore.Qt.CopyAction)
+                event.accept()
+                links = []
+                for url in event.mimeData().urls():
+                    
+                    links.append(str(url.toLocalFile()))
+                    print(links[0])
 
-    def dragMoveEvent(self, event):
-        event.accept()
+                    index = self.indexAt(event.pos())
+                    if not index.isValid():
+                        return
 
-class TreeModel(QtCore.QAbstractItemModel):
-    def __init__(self):
-        QtCore.QAbstractItemModel.__init__(self)
-        self.nodes = ['node0', 'node1', 'node2']
+                    row = index.row()
+                    item = self.model().item(row, 0)
+                    print(index.data())
 
-    def index(self, row, column, parent):
-        return self.createIndex(row, column, self.nodes[row])
 
-    def parent(self, index):
-        return QtCore.QModelIndex()
+                    item.setIcon(QtGui.QIcon('checkmark.png'))
+                    #self.clearSelection()
 
-    def rowCount(self, index):
-        if index.internalPointer() in self.nodes:
-            return 0
-        return len(self.nodes)
+                    for col in range(self.model().columnCount()):
 
-    def columnCount(self, index):
-        return 1
+                        self.model().item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
 
-    def data(self, index, role):
-        if role == 0: 
-            return index.internalPointer()
-        else:
-            return None
+                    self.clearSelection()
 
-    def supportedDropActions(self): 
-        return QtCore.Qt.CopyAction | QtCore.Qt.MoveAction         
+                    #new_name = '{}_{}'.format(self.item(row, 0).text(), self.item(row, 1).text())
+                    #copy_to_folder(links[0], self.root_dir, '{}.pdf'.format(new_name))
 
-    def flags(self, index):
-        if not index.isValid():
-            return QtCore.Qt.ItemIsEnabled
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | \
-               QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled        
 
-    def mimeTypes(self):
-        return ['text/xml']
+class MyModel(QtGui.QStandardItemModel):
 
-    def mimeData(self, indexes):
-        mimedata = QtCore.QMimeData()
-        mimedata.setData('text/xml', 'mimeData')
-        return mimedata
+    def supportedDragActions(self):
+        return Qt.LinkAction | Qt.CopyAction
 
-    def dropMimeData(self, data, action, row, column, parent):
-        print('dropMimeData %s %s %s %s' % (data.data('text/xml'), action, row, parent))
+    def canDropMimeData(self, *args):
         return True
 
-
-
-class BaseWin(QWidget):
+class Example(QMainWindow):
     
     def __init__(self):
         super().__init__()
-                
-        self.setGeometry(300, 300, 300, 220)
-        self.setWindowTitle('Icon')
-        #self.setWindowIcon(QtGui.QIcon('icon.png'))  
-
-        vbox = QVBoxLayout(self)
-
-        self.model = TreeModel()
-        self.view = QTreeView()
-
-        self.view.setModel(self.model)
-        vbox.addWidget(self.view)
-        self.view.setAcceptDrops(True)
-
-
         
-    
+        #self.resize(300, 400)
+        #self.center()
+        self.setGeometry(200, 200, 300, 400)
+        
+        
+        main_frame = QFrame()
+        self.setCentralWidget(main_frame)
+        vbox = QVBoxLayout(main_frame)
 
+        #self.tableview = QTableView()
+        self.tableview = MyTableView()
+        self.tableview.setDropIndicatorShown(True)
+        self.tableview.setDragEnabled(True)
+        self.tableview.setAcceptDrops(True)
+        self.tableview.setDragDropMode(QTableView.DragDrop)
+        self.tableview.setDefaultDropAction(QtCore.Qt.LinkAction)
+        self.tableview.setDropIndicatorShown(True)
+
+
+        vbox.addWidget(self.tableview)
+
+        #self.model = QtGui.QStandardItemModel()
+        self.model = MyModel()
+        self.tableview.setModel(self.model)
+
+        for i in range(10):
+        
+            item = QtGui.QStandardItem('Item {}'.format(i))
+            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
+            self.model.setItem(i,0,item)
+
+            item = QtGui.QStandardItem('Some info {}'.format(i))
+            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
+            self.model.setItem(i,1,item)
+
+
+        self.setWindowTitle('Center')    
+        self.show()
+        
+        
+    def center(self):
+        
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+        
+        
 if __name__ == '__main__':
     
     app = QApplication(sys.argv)
-    win = BaseWin()
-    win.show()
-    sys.exit(app.exec_())  
+    ex = Example()
+    sys.exit(app.exec_()) 
