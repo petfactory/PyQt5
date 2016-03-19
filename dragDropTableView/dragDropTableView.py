@@ -35,8 +35,17 @@ class MyTableView(QTableView):
 
                     row = index.row()
                     item = self.model().item(row, 0)
-                    print(index.data())
+                    #print(index.data())
 
+                    self.clearSelection()
+
+                    if self.main_win.root_dir is None:
+                        print('No valid root directory is set')
+                        return
+
+                    if not os.path.isdir(self.main_win.root_dir):
+                        print('No valid root directory is set')
+                        return
 
                     item.setIcon(QtGui.QIcon('checkmark.png'))
                     #self.clearSelection()
@@ -45,7 +54,7 @@ class MyTableView(QTableView):
 
                         self.model().item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
 
-                    self.clearSelection()
+                    
 
                     new_name = '{} {}'.format(self.model().item(row, 0).text(), self.model().item(row, 1).text())
                     self.main_win.copy_to_folder(links[0],'{}.pdf'.format(new_name))
@@ -65,7 +74,8 @@ class Example(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.root_dir = '/Users/johan/Desktop/apa'
+        self.root_dir = None
+
         #self.resize(300, 400)
         #self.center()
         self.setGeometry(200, 200, 300, 400)
@@ -83,6 +93,10 @@ class Example(QMainWindow):
         delete_action = QAction('Delete', self)
         delete_action.triggered.connect(self.delete_selected_rows)
         file_menu.addAction(delete_action)
+
+        set_root_dir_action = QAction('Set Root Directory', self)
+        set_root_dir_action.triggered.connect(self.set_root_dir)
+        file_menu.addAction(set_root_dir_action)
 
 
         main_frame = QFrame()
@@ -108,6 +122,13 @@ class Example(QMainWindow):
         self.read_csv()
 
         self.show()
+
+    def set_root_dir(self):
+        
+        sel_dir = QFileDialog.getExistingDirectory()
+        print(sel_dir)
+        if sel_dir:
+            self.root_dir = sel_dir
 
     def delete_selected_rows(self):
 
@@ -166,6 +187,14 @@ class Example(QMainWindow):
     
 
     def copy_to_folder(self, source_file, new_name):
+
+        if self.root_dir is None:
+            print('No valid root directory is set')
+            return
+
+        if not os.path.isdir(self.root_dir):
+            print('No valid root directory is set')
+            return
 
         dest_file = os.path.join(self.root_dir, new_name)
 
