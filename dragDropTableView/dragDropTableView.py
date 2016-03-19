@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication, QMainWindow, 
 from PyQt5 import QtGui, QtCore
 import csv
 import shutil
+import re
 
 class MyTableView(QTableView):
 
@@ -74,7 +75,9 @@ class Example(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.root_dir = None
+        #self.root_dir = None
+        self.root_dir = '/Users/johan/Desktop/apa'
+        self.ext = '.pdf'
 
         #self.resize(300, 400)
         #self.center()
@@ -97,6 +100,10 @@ class Example(QMainWindow):
         set_root_dir_action = QAction('Set Root Directory', self)
         set_root_dir_action.triggered.connect(self.set_root_dir)
         file_menu.addAction(set_root_dir_action)
+
+        match_action = QAction('Match', self)
+        match_action.triggered.connect(self.match_files)
+        file_menu.addAction(match_action)
 
 
         main_frame = QFrame()
@@ -122,6 +129,31 @@ class Example(QMainWindow):
         self.read_csv()
 
         self.show()
+
+    def match_files(self):
+
+        if self.root_dir is None:
+            print('No valid root directory is set')
+            return
+
+        if not os.path.isdir(self.root_dir):
+            print('No valid root directory is set')
+            return
+
+        file_list = [p for p in os.listdir(self.root_dir) if os.path.isfile(os.path.join(self.root_dir, p)) and os.path.splitext(p)[1] == self.ext]
+        
+        num_rows = self.model.rowCount()
+
+
+        for file in file_list:
+
+            for row in range(num_rows):
+                date = self.model.index(row, 0).data()
+                desc = self.model.index(row, 1).data()
+                name = '{} {}'.format(date, desc)
+                print(name, file)
+
+
 
     def set_root_dir(self):
         
@@ -206,7 +238,7 @@ class Example(QMainWindow):
     def read_csv(self):
 
         #file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
-        file_name = '/Users/johan/Desktop/test.csv'
+        file_name = '/Users/johan/Desktop/test2.csv'
 
         if file_name:
 
@@ -220,10 +252,8 @@ class Example(QMainWindow):
                 for row_index, row in enumerate(reader):
 
                     if row_index == 0:
-                        print(len(row))
                         header_list = row
                     else:
-                        print(row)
                         data_list.append(row)
 
             self.populate_model(header_list, data_list)
