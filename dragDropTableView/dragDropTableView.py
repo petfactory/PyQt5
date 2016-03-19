@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 import sys, os
 from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication, QMainWindow, QFrame, QTableView, QVBoxLayout, QAbstractItemView, QFileDialog, QAction
@@ -7,6 +6,7 @@ from PyQt5 import QtGui, QtCore
 import csv
 import shutil
 import re
+import unicodedata
 
 class MyTableView(QTableView):
 
@@ -130,6 +130,7 @@ class Example(QMainWindow):
 
         self.show()
 
+
     def match_files(self):
 
         if self.root_dir is None:
@@ -144,14 +145,25 @@ class Example(QMainWindow):
         
         num_rows = self.model.rowCount()
 
+        match_list = []
 
         for file in file_list:
 
             for row in range(num_rows):
                 date = self.model.index(row, 0).data()
-                desc = self.model.index(row, 1).data()
-                name = '{} {}'.format(date, desc)
-                print(name, file)
+                desc = unicodedata.normalize('NFC', self.model.index(row, 1).data())
+
+                name = r'{} {}'.format(date, desc)
+                
+                file_name = unicodedata.normalize('NFC', file)
+                
+                if re.search(name, file_name):
+                    match_list.append(file_name)
+
+                    for col in range(self.model.columnCount()):
+                        self.model.item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
+                    
+        print(match_list)
 
 
 
