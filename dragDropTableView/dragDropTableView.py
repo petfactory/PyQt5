@@ -131,7 +131,7 @@ class Example(QMainWindow):
 
         self.setWindowTitle('Center')
 
-        self.read_csv()
+        #self.read_csv()
         #self.match_files()
 
         self.show()
@@ -271,8 +271,8 @@ class Example(QMainWindow):
 
     def read_csv(self):
 
-        #file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
-        file_name = '/Users/johan/Desktop/test.csv'
+        file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
+        #file_name = '/Users/johan/Desktop/test.csv'
 
         if file_name:
 
