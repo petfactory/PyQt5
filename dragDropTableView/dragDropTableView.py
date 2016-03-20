@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
 import sys, os
-from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication, QMainWindow, QFrame, QTableView, QVBoxLayout, QAbstractItemView, QFileDialog, QAction
+from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication, QMainWindow, QFrame, QTableView, QVBoxLayout, QAbstractItemView, QFileDialog, QAction, QMessageBox
 from PyQt5 import QtGui, QtCore
 import csv
 import shutil
 import re
 import unicodedata
+import pprint
 
 class MyTableView(QTableView):
 
@@ -41,10 +42,12 @@ class MyTableView(QTableView):
                     self.clearSelection()
 
                     if self.main_win.root_dir is None:
+                        QMessageBox.information(self, 'Message', "No valid root directory is set")
                         print('No valid root directory is set')
                         return
 
                     if not os.path.isdir(self.main_win.root_dir):
+                        QMessageBox.information(self, 'Message', "No valid root directory is set")
                         print('No valid root directory is set')
                         return
 
@@ -75,13 +78,13 @@ class Example(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        #self.root_dir = None
-        self.root_dir = '/Users/johan/Desktop/apa'
+        self.root_dir = None
+        #self.root_dir = '/Users/johan/Desktop/apa'
         self.ext = '.pdf'
 
         #self.resize(300, 400)
         #self.center()
-        self.setGeometry(200, 200, 300, 400)
+        self.setGeometry(5, 50, 500, 400)
         
         menubar = self.menuBar()
         menubar.setNativeMenuBar(False)
@@ -126,7 +129,8 @@ class Example(QMainWindow):
 
         self.setWindowTitle('Center')
 
-        self.read_csv()
+        #self.read_csv()
+        #self.match_files()
 
         self.show()
 
@@ -134,10 +138,12 @@ class Example(QMainWindow):
     def match_files(self):
 
         if self.root_dir is None:
+            QMessageBox.information(self, 'Message', "No valid root directory is set")
             print('No valid root directory is set')
             return
 
         if not os.path.isdir(self.root_dir):
+            QMessageBox.information(self, 'Message', "No valid root directory is set")
             print('No valid root directory is set')
             return
 
@@ -149,6 +155,7 @@ class Example(QMainWindow):
 
         for file in file_list:
 
+            print(file)
             for row in range(num_rows):
                 date = self.model.index(row, 0).data()
                 desc = unicodedata.normalize('NFC', self.model.index(row, 1).data())
@@ -157,13 +164,15 @@ class Example(QMainWindow):
                 
                 file_name = unicodedata.normalize('NFC', file)
                 
-                if re.search(name, file_name):
+                if file_name.startswith(name):
                     match_list.append(file_name)
+                #if re.search(name, file_name):
+                    #match_list.append(file_name)
 
                     for col in range(self.model.columnCount()):
                         self.model.item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
                     
-        print(match_list)
+        pprint.pprint(match_list)
 
 
 
@@ -175,6 +184,10 @@ class Example(QMainWindow):
             self.root_dir = sel_dir
 
     def delete_selected_rows(self):
+
+        reply = QMessageBox.question(self, 'Message', "Delete selected rows?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
 
         selected_indexes =  self.tableview.selectionModel().selectedRows()
  
@@ -210,6 +223,8 @@ class Example(QMainWindow):
             self.model.setItem(row,2,amount_item)
 
         self.tableview.horizontalHeader().setStretchLastSection(True)
+        self.tableview.resizeColumnsToContents()
+        
 
     def resource_path(self, relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -233,24 +248,28 @@ class Example(QMainWindow):
     def copy_to_folder(self, source_file, new_name):
 
         if self.root_dir is None:
+            QMessageBox.information(self, 'Message', "No valid root directory is set")
             print('No valid root directory is set')
             return
 
         if not os.path.isdir(self.root_dir):
+            QMessageBox.information(self, 'Message', "No valid root directory is set")
             print('No valid root directory is set')
             return
 
         dest_file = os.path.join(self.root_dir, new_name)
 
         if os.path.isfile(dest_file):
-            print('File exists. Overwrite?')
+            reply = QMessageBox.question(self, 'Message', "File exists, overwrite?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
 
         shutil.copy(source_file, dest_file)
 
     def read_csv(self):
 
-        #file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
-        file_name = '/Users/johan/Desktop/test2.csv'
+        file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
+        #file_name = '/Users/johan/Desktop/test2.csv'
 
         if file_name:
 
