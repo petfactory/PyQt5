@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
 import sys, os
 from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication, QMainWindow, QFrame, QTableView, QVBoxLayout, QAbstractItemView, QFileDialog, QAction, QMessageBox
@@ -8,6 +9,7 @@ import shutil
 import re
 import unicodedata
 import pprint
+import codecs
 
 class MyTableView(QTableView):
 
@@ -129,7 +131,7 @@ class Example(QMainWindow):
 
         self.setWindowTitle('Center')
 
-        #self.read_csv()
+        self.read_csv()
         #self.match_files()
 
         self.show()
@@ -214,7 +216,8 @@ class Example(QMainWindow):
             date_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
             self.model.setItem(row,0,date_item)
 
-            desc_item = QtGui.QStandardItem(data[1])
+            desc = '{}'.format(unicodedata.normalize('NFC', data[1]))
+            desc_item = QtGui.QStandardItem(desc)
             desc_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
             self.model.setItem(row,1,desc_item)
 
@@ -268,14 +271,15 @@ class Example(QMainWindow):
 
     def read_csv(self):
 
-        file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
-        #file_name = '/Users/johan/Desktop/test2.csv'
+        #file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
+        file_name = '/Users/johan/Desktop/test.csv'
 
         if file_name:
 
             data_list = []
             header_list = None
-            with open(file_name) as csvfile:    
+
+            with open(file_name, encoding='utf-8') as csvfile:    
                 dialect = csv.Sniffer().sniff(csvfile.read(1024))
                 csvfile.seek(0)
                 reader = csv.reader(csvfile, dialect)
@@ -291,10 +295,8 @@ class Example(QMainWindow):
 
 
 
-
 if __name__ == '__main__':
     
-
     app = QApplication(sys.argv)
     ex = Example()
     sys.exit(app.exec_())
