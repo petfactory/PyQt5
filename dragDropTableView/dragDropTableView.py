@@ -139,7 +139,7 @@ class Example(QMainWindow):
                     print('No valid root directory is set')
                     return
 
-                date_item.setIcon(QtGui.QIcon('checkmark.png'))
+                date_item.setIcon(QtGui.QIcon(self.resource_path('checkmark.png')))
 
                 for col in range(self.model.columnCount()):
 

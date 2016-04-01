@@ -6,7 +6,8 @@ block_cipher = None
 a = Analysis(['dragDropTableView.py'],
              pathex=['/Users/johan/Dev/PyQt5/dragDropTableView'],
              binaries=None,
-             datas=None,
+             datas=[('checkmark.png', '.'),
+                    ('open.png', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -31,6 +32,6 @@ app = BUNDLE(exe,
              icon=None,
              bundle_identifier=None,
              info_plist={
-            	'NSHighResolutionCapable':'True'
-            	},
+              'NSHighResolutionCapable':'True'
+              },
             )
