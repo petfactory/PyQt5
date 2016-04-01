@@ -54,7 +54,6 @@ class Example(QMainWindow):
         super().__init__()
         
         self.root_dir = None
-        #self.root_dir = '/Users/johan/Desktop/root'
         self.ext = '.pdf'
 
         #self.resize(300, 400)
@@ -103,7 +102,9 @@ class Example(QMainWindow):
 
         self.setWindowTitle('Center')
 
-        #self.read_csv()
+
+        #self.root_dir = ''
+        #self.read_csv('')
         #self.match_files()
         self.show()
 
@@ -171,7 +172,6 @@ class Example(QMainWindow):
 
         for file in file_list:
 
-            print(file)
             for row in range(num_rows):
                 date = self.model.index(row, 0).data()
                 desc = unicodedata.normalize('NFC', self.model.index(row, 1).data())
@@ -187,9 +187,6 @@ class Example(QMainWindow):
 
                     for col in range(self.model.columnCount()):
                         self.model.item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
-                    
-        pprint.pprint(match_list)
-
 
 
     def set_root_dir(self):
