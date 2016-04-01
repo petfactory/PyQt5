@@ -13,9 +13,10 @@ import codecs
 
 class MyTableView(QTableView):
 
-    def __init__(self, main_win=None, parent=None):
+    item_dropped = QtCore.pyqtSignal(str, int)
+
+    def __init__(self, parent=None):
         super(MyTableView, self).__init__(parent)
-        self.main_win = main_win
 
     def dragMoveEvent(self, event):
         index = self.indexAt(event.pos())
@@ -31,40 +32,12 @@ class MyTableView(QTableView):
                 for url in event.mimeData().urls():
                     
                     links.append(str(url.toLocalFile()))
-                    print(links[0])
 
                     index = self.indexAt(event.pos())
-                    if not index.isValid():
-                        return
-
                     row = index.row()
-                    item = self.model().item(row, 0)
-                    #print(index.data())
-
-                    self.clearSelection()
-
-                    if self.main_win.root_dir is None:
-                        QMessageBox.information(self, 'Message', "No valid root directory is set")
-                        print('No valid root directory is set')
-                        return
-
-                    if not os.path.isdir(self.main_win.root_dir):
-                        QMessageBox.information(self, 'Message', "No valid root directory is set")
-                        print('No valid root directory is set')
-                        return
-
-                    item.setIcon(QtGui.QIcon('checkmark.png'))
-                    #self.clearSelection()
-
-                    for col in range(self.model().columnCount()):
-
-                        self.model().item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
-
-                    
-
-                    new_name = '{} {}'.format(self.model().item(row, 0).text(), self.model().item(row, 1).text())
-                    self.main_win.copy_to_folder(links[0],'{}.pdf'.format(new_name))
-                    #print(self.main_win)
+                    #if not index.isValid():
+                        #row = index.row()
+                    self.item_dropped.emit(links[0], row)
 
 
 class MyModel(QtGui.QStandardItemModel):
@@ -81,7 +54,7 @@ class Example(QMainWindow):
         super().__init__()
         
         self.root_dir = None
-        #self.root_dir = '/Users/johan/Desktop/apa'
+        #self.root_dir = '/Users/johan/Desktop/root'
         self.ext = '.pdf'
 
         #self.resize(300, 400)
@@ -95,7 +68,7 @@ class Example(QMainWindow):
         open_action = QAction(QtGui.QIcon(self.resource_path('open.png')), '&Open', self)
         open_action.setShortcut('Ctrl+O')
         open_action.setStatusTip('Open File')
-        open_action.triggered.connect(self.read_csv)
+        open_action.triggered.connect(self.open_csv_slot)
         file_menu.addAction(open_action)
 
         delete_action = QAction('Delete', self)
@@ -110,13 +83,11 @@ class Example(QMainWindow):
         match_action.triggered.connect(self.match_files)
         file_menu.addAction(match_action)
 
-
         main_frame = QFrame()
         self.setCentralWidget(main_frame)
         vbox = QVBoxLayout(main_frame)
 
-        #self.tableview = QTableView()
-        self.tableview = MyTableView(main_win=self)
+        self.tableview = MyTableView()
 
         self.tableview.setDropIndicatorShown(True)
         self.tableview.setDragEnabled(True)
@@ -124,6 +95,7 @@ class Example(QMainWindow):
         self.tableview.setDragDropMode(QTableView.DragDrop)
         self.tableview.setDefaultDropAction(QtCore.Qt.LinkAction)
         self.tableview.setDropIndicatorShown(True)
+        self.tableview.item_dropped.connect(self.item_dropped_slot)
         vbox.addWidget(self.tableview)
 
         self.model = MyModel()
@@ -133,8 +105,50 @@ class Example(QMainWindow):
 
         #self.read_csv()
         #self.match_files()
-
         self.show()
+
+    def item_dropped_slot(self, path, row):
+        #print(path, row)
+
+        if os.path.isdir(path):
+            print('dropped folder')
+            self.root_dir = path
+            return
+
+        ext = os.path.splitext(path)[-1].lower()
+
+        if ext == '.csv':
+            self.read_csv(path)
+
+        elif ext == '.pdf':
+
+            self.tableview.clearSelection()
+
+            if row >= 0:
+
+                date_item = self.model.item(row, 0)
+                desc_item = self.model.item(row, 1)
+
+                if self.root_dir is None:
+                    QMessageBox.information(self, 'Message', "No valid root directory is set")
+                    print('No valid root directory is set')
+                    return
+
+                if not os.path.isdir(self.root_dir):
+                    QMessageBox.information(self, 'Message', "No valid root directory is set")
+                    print('No valid root directory is set')
+                    return
+
+                date_item.setIcon(QtGui.QIcon('checkmark.png'))
+
+                for col in range(self.model.columnCount()):
+
+                    self.model.item(row, col).setBackground(QtGui.QBrush(QtGui.QColor(128, 218, 112)))
+
+                
+                new_name = r'{} {}'.format(date_item.text(), desc_item.text().replace("/", ' '))
+                #print(new_name.replace("/", '_'))
+                self.copy_to_folder(r'{}'.format(path),r'{}.pdf'.format(new_name))        
 
 
     def match_files(self):
@@ -269,10 +283,16 @@ class Example(QMainWindow):
 
         shutil.copy(source_file, dest_file)
 
-    def read_csv(self):
-
+    def open_csv_slot(self, *args):
         file_name, selected_filter = QFileDialog.getOpenFileName(None, 'Load csv file', None, filter='CSV (*.csv)')
-        #file_name = '/Users/johan/Desktop/test.csv'
+        if file_name:
+            self.read_csv(file_name)
+
+    def read_csv(self, file_name):
+
+        if not os.path.isfile(file_name):
+            print('Not a vlid file path')
+            return
 
         if file_name:
 
